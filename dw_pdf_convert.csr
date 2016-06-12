@@ -1,0 +1,24 @@
+<a id="(.*)"></a><img src="index-(.*)_1.jpg"/><br>\n <br>\nSprachbar <br>\nBegleitmaterialien <br>\n <br>
+
+
+<br>\nSeite (.*)/(.*)  <br>\n <br>\nDeutsch zum Mitnehmen <br>\ndw.com/sprachbar <br>\n Deutsche Welle <br>\n<hr/>
+
+
+<i>Autor: (.*) </i><br>\n<i>Redaktion: (.*) </i><br>
+
+
+<i>Autorin: Pia Schneider </i><br>\n<i>Redaktion: Beatrice Warken </i><br>
+
+
+Sprachbar <br>\nBegleitmaterialien <br>\n
+
+
+<a id="(.*)"></a><img src="index-(.*)_(.*).jpg"/><br>\n <br>
+
+
+Deutsch zum Mitnehmen <br>
+
+
+<b>\w </b>
+
+
