@@ -10,9 +10,7 @@ import shelve
 import time
 import logging
 
-FORMAT = '%(asctime)-15s %(message)s'
-logging.basicConfig(filename='trace.log', level=logging.INFO, format=FORMAT)
-logging.basicConfig(filename='trace.log', level=logging.ERROR, format=FORMAT)
+
 
 from email import encoders
 from email.message import Message
@@ -24,6 +22,9 @@ import codecs
 
 from lxml import etree
 from io import StringIO
+
+
+
 
 def check_feeds():
     logging.info('****************Feeds check is started****************')
@@ -56,14 +57,14 @@ def check_feeds():
     logging.info('****************Feeds check is completed****************')
 
 def read_downloaded_feed_entries(name):     
-    with shelve.open('feeds') as db:
+    with shelve.open(data_folder + 'feeds') as db:
         if name in db.keys():
             return db[name]
         else:
             return []
 
 def save_feed_entries(feed_name, feed_entries):
-    with shelve.open('feeds') as db:
+    with shelve.open(data_folder + 'feeds') as db:
         db[feed_name] = feed_entries			
             
 def get_new_feed_entries(rss_entries, downloaded_entries):
@@ -73,12 +74,6 @@ def get_file_url(feed_entry_url):
     url = urlparse(feed_entry_url)
     feed_entry_url_path = urllib.parse.quote(codecs.encode(url.path,'utf-8'))
     url_template = '{0}://{1}{2}'
-    #print(feed_entry_url)
-    #print(urllib.parse.quote(feed_entry_url))
-    #url = urlparse(urllib.parse.quote(feed_entry_url))
-    #print(url.scheme + '://' + url.netloc + feed_entry_url_path )
-    #sys.exit()
-    #print(urllib.parse.quote(feed_entry_url))
     with urllib.request.urlopen(url_template.format(url.scheme, url.netloc, feed_entry_url_path)) as f:
         response = f.read()
     html_string = str(response, 'utf-8')
@@ -105,7 +100,7 @@ def download_file(file_url, feed_name):
     with urllib.request.urlopen(file_url) as f:
         response = f.read()
     
-    folder_name = base_settings['FolderName']
+    folder_name = base_settings['PodcastsFolder']
 	
     if not os.path.exists(folder_name):
         os.mkdir(folder_name)
@@ -162,4 +157,8 @@ config.read('config.ini')
 
 base_settings = config['BaseSettings']
 smtp_settings = config['SmtpSettings']
+data_folder = base_settings['DataFolder']
+FORMAT = '%(asctime)-15s %(message)s'
+logging.basicConfig(filename=data_folder + '/trace.log', level=logging.INFO, format=FORMAT)
+logging.basicConfig(filename=data_folder + '/trace.log', level=logging.ERROR, format=FORMAT)
 check_feeds()
