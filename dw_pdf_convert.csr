@@ -1,32 +1,50 @@
-<i>Autor: (.*) </i>
+<i>Autor:(.*)</i>
 
 
-<i>Autorin: (.*) </i>
+<i>Autorin:(.*)</i>
 
 
-<i>Autorinnen: (.*) </i>
+<i>Autoren:(.*)</i>
 
 
-<i>Redaktion: (.*) </i>
+<i>Autorinnen:(.*)</i>
 
 
-<a id="(.*)"></a><img src="index-(.*)_(.*).jpg"/>
+<i>Autor / Autorin:(.*)</i>
 
 
-(.*)<br>\nBegleitmaterialien
+<i>Redaktion:(.*)</i>
 
 
-Seite \d/\d(.|\n)*?(Deutsche Welle) <br>
+<a id="(.*)"></a>
 
 
-<b> </b>
+<img src="index-(.*)_(.*).(.*)"/>
 
 
-<br>( |\n)*?<br>
+(.*)<br>\nBegleitmaterialien(.*)<br>
+
+
+Seite \d( )*/( )*\d(.|\n)*?(Deutsche Welle)\s<br>
+
+
+<b>\s</b>
+
+
+</b><br>\n<b>
+</b><b>
+
+</b>\s*<br>
+</b><temp_br>
+
+<br>( |\n|)*?<br>
 <temp_br>
 
 <br>\n 
 <temp_br>
+
+\.\s*<br>
+.<temp_br>
 
 <br>
 

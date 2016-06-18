@@ -9,22 +9,14 @@ import configparser
 import shelve
 import time
 import logging
-
-
-
 from email import encoders
 from email.message import Message
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
-
 from urllib.parse import urlparse
 import codecs
-
 from lxml import etree
 from io import StringIO
-
-
-
 
 def check_feeds():
     logging.info('****************Feeds check is started****************')
@@ -35,36 +27,46 @@ def check_feeds():
             feed_entries = read_downloaded_feed_entries(feed_name)
             rss = feedparser.parse(url)
             new_feed_entries = get_new_feed_entries(rss.entries, feed_entries)
+            
             logging.info('{0} new feeds'.format(len(new_feed_entries)))
             for feed_entry in new_feed_entries:
                 logging.info('feed: {0}'.format(feed_entry.title))
+                
                 file_url = get_file_url(feed_entry.link)
+                
                 logging.info('downloading file: {0}'.format(file_url))
-                file_path = download_file(file_url, feed_name)
+                
+                file_path = download_file(file_url, feed_name, feed_entry.title)
+                
                 logging.info('converting file...')
+                
                 converted_file_path = convert_file(file_path)
+                set_meta_data(converted_file_path)
                 time.sleep(int(base_settings['WaitTimeToSendEmail']))
+                
                 logging.info('sending file...')
-                #send_email(converted_file_path)
+                send_email(converted_file_path)
                 feed_entries.append(feed_entry.link)
+                
                 logging.info('saving downloaded feed entry')
+                
                 save_feed_entries(feed_name, feed_entries)
-                sys.exit()
             logging.info('********************************Check {0} feed is completed********************************'.format(feed_name))
     except Exception as ex:
         logging.info('Exception has been raised')
         logging.exception(ex)
+        
     logging.info('****************Feeds check is completed****************')
 
 def read_downloaded_feed_entries(name):     
-    with shelve.open(data_folder + 'feeds') as db:
+    with shelve.open(data_folder + '/feeds') as db:
         if name in db.keys():
             return db[name]
         else:
             return []
 
 def save_feed_entries(feed_name, feed_entries):
-    with shelve.open(data_folder + 'feeds') as db:
+    with shelve.open(data_folder + '/feeds') as db:
         db[feed_name] = feed_entries			
             
 def get_new_feed_entries(rss_entries, downloaded_entries):
@@ -96,8 +98,11 @@ def get_file_url(feed_entry_url):
     
     return url_template.format(url.scheme, url.netloc, file_url)
 
-def download_file(file_url, feed_name):
-    with urllib.request.urlopen(file_url) as f:
+def download_file(file_url, feed_name, title):
+    url = urlparse(file_url)
+    url_path = urllib.parse.quote(codecs.encode(url.path,'utf-8'))
+    url_template = '{0}://{1}{2}'
+    with urllib.request.urlopen(url_template.format(url.scheme, url.netloc, url_path)) as f:
         response = f.read()
     
     folder_name = base_settings['PodcastsFolder']
@@ -109,19 +114,21 @@ def download_file(file_url, feed_name):
     if not os.path.exists(dir):
         os.mkdir(dir)
 	
-    file_name = os.path.basename(file_url)
-    file_path = dir + file_name
+    file_ext = os.path.splitext(os.path.basename(file_url))[1]
+    file_path = dir + feed_name + "-" + title.lower().replace(" ", "-") + file_ext
     with open(file_path, "wb+") as f:
         f.write(response)
 		
     return file_path
 
 def convert_file(file_path):
-    converted_file_path = '{0}.azw3'.format(os.path.splitext(file_path)[0])
-    subprocess.run(["ebook-convert", file_path,
-                converted_file_path,
-                "--enable-heuristics", "--search-replace", "dw_pdf_convert.csr"])
+    converted_file_path = '{0}.mobi'.format(os.path.splitext(file_path)[0])
+    subprocess.run(["ebook-convert", file_path, converted_file_path, "--search-replace", "dw_pdf_convert.csr"])
     return converted_file_path
+    
+def set_meta_data(file_path):
+    file_name = os.path.splitext(os.path.basename(file_path))[0]
+    subprocess.run(["ebook-meta", file_path, "--authors", "DW", "--book-producer", "DW", "--title", file_name, "--language", "German"])
 
 def send_email(file_path):
     
@@ -158,6 +165,9 @@ config.read('config.ini')
 base_settings = config['BaseSettings']
 smtp_settings = config['SmtpSettings']
 data_folder = base_settings['DataFolder']
+if not os.path.exists(data_folder):
+    os.mkdir(data_folder)
+    
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(filename=data_folder + '/trace.log', level=logging.INFO, format=FORMAT)
 logging.basicConfig(filename=data_folder + '/trace.log', level=logging.ERROR, format=FORMAT)
